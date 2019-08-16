@@ -424,6 +424,46 @@ $_documentContainer.innerHTML = `<dom-module id="bakery-app-layout-theme" theme-
       }
     }
   </style>
+</custom-style>
+
+<!-- ADDED FOR CALL TO ACTION -->
+<dom-module id="cta-notification-theme" theme-for="vaadin-notification-card">
+  <template>
+    <style>
+      :host([theme~="cta"]) [part~="content"] {
+        background: var(--lumo-contrast);
+        color: #FFF;
+        padding: var(--lumo-space-s);
+      }
+    </style>
+  </template>
+</dom-module>
+
+<custom-style>
+  <style>
+    vaadin-notification-card flow-component-renderer {
+      width: 100%;
+    }
+    .cta-container a {
+      color: #FFF;
+    }
+    .cta-container a:hover {
+      text-decoration: none;
+    }
+    .cta-title {
+      margin: 0;
+      color: #FFF;
+      font-size: var(--lumo-font-size-m);
+      font-weight: 500;
+    }
+    .cta-text {
+      font-size: var(--lumo-font-size-s);
+    }
+    .cta-container iron-icon {
+      color: var(--lumo-tint-30pct);
+      padding: 0 var(--lumo-space-s);
+    }
+  </style>
 </custom-style>`;
 
 document.head.appendChild($_documentContainer.content);
