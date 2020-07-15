@@ -1,7 +1,5 @@
 package com.vaadin.starter.bakery.backend.service;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,9 +21,9 @@ public class UserService implements FilterableCrudService<User> {
 		this.userRepository = userRepository;
 	}
 
-	public Page<User> findAnyMatching(Optional<String> filter, Pageable pageable) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
+	public Page<User> findAnyMatching(String filter, Pageable pageable) {
+		if (filter != null) {
+			String repositoryFilter = "%" + filter + "%";
 			return getRepository()
 					.findByEmailLikeIgnoreCaseOrFirstNameLikeIgnoreCaseOrLastNameLikeIgnoreCaseOrRoleLikeIgnoreCase(
 							repositoryFilter, repositoryFilter, repositoryFilter, repositoryFilter, pageable);
@@ -35,9 +33,9 @@ public class UserService implements FilterableCrudService<User> {
 	}
 
 	@Override
-	public long countAnyMatching(Optional<String> filter) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
+	public long countAnyMatching(String filter) {
+		if (filter != null) {
+			String repositoryFilter = "%" + filter + "%";
 			return userRepository.countByEmailLikeIgnoreCaseOrFirstNameLikeIgnoreCaseOrLastNameLikeIgnoreCaseOrRoleLikeIgnoreCase(
 					repositoryFilter, repositoryFilter, repositoryFilter, repositoryFilter);
 		} else {

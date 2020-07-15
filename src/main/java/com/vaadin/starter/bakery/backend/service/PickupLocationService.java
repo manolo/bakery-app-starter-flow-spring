@@ -1,7 +1,5 @@
 package com.vaadin.starter.bakery.backend.service;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,18 +21,18 @@ public class PickupLocationService implements FilterableCrudService<PickupLocati
 		this.pickupLocationRepository = pickupLocationRepository;
 	}
 
-	public Page<PickupLocation> findAnyMatching(Optional<String> filter, Pageable pageable) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
+	public Page<PickupLocation> findAnyMatching(String filter, Pageable pageable) {
+		if (filter != null) {
+			String repositoryFilter = "%" + filter + "%";
 			return pickupLocationRepository.findByNameLikeIgnoreCase(repositoryFilter, pageable);
 		} else {
 			return pickupLocationRepository.findAll(pageable);
 		}
 	}
 
-	public long countAnyMatching(Optional<String> filter) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
+	public long countAnyMatching(String filter) {
+		if (filter != null) {
+			String repositoryFilter = "%" + filter + "%";
 			return pickupLocationRepository.countByNameLikeIgnoreCase(repositoryFilter);
 		} else {
 			return pickupLocationRepository.count();
@@ -42,7 +40,7 @@ public class PickupLocationService implements FilterableCrudService<PickupLocati
 	}
 
 	public PickupLocation getDefault() {
-		return findAnyMatching(Optional.empty(), PageRequest.of(0, 1)).iterator().next();
+		return findAnyMatching(null, PageRequest.of(0, 1)).iterator().next();
 	}
 
 	@Override

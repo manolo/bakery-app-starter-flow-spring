@@ -64,10 +64,10 @@ public class OrderItemEditor extends PolymerTemplate<TemplateModel> implements H
 				Objects::equals, c ->  {});
 		products.setDataProvider((filter, offset, limit) -> 
 			productService.findAnyMatching(
-					Optional.ofNullable(filter),
+					filter,
 					PageRequest.of( (offset/limit), limit))
 			.stream(), 
-			filter -> (int) productService.countAnyMatching(Optional.ofNullable(filter)));
+			filter -> (int) productService.countAnyMatching(filter));
 		products.addValueChangeListener(e -> {
 			setPrice();
 			fireEvent(new ProductChangeEvent(this, e.getValue()));

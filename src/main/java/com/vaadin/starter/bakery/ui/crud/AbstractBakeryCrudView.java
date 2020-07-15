@@ -74,7 +74,8 @@ public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends C
 
 	private void listItems(FilterableCrudService<E> service, Grid<E> grid, String filter) {
 		grid.setItems(q -> {
-        	return service.findAnyMatching(Optional.of(filter), PageRequest.of(q.getPage(), q.getPageSize(), SpringDataVaadinUtil.toSpringDataSort(q).and(Sort.by("id")))).stream();
+        	return service.findAnyMatching(filter, 
+        			PageRequest.of(q.getPage(), q.getPageSize(), SpringDataVaadinUtil.toSpringDataSort(q).and(Sort.by("id")))).stream();
         });
 	}
 

@@ -24,9 +24,9 @@ public class ProductService implements FilterableCrudService<Product> {
 	}
 
 	@Override
-	public Page<Product> findAnyMatching(Optional<String> filter, Pageable pageable) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
+	public Page<Product> findAnyMatching(String filter, Pageable pageable) {
+		if (filter != null) {
+			String repositoryFilter = "%" + filter + "%";
 			return productRepository.findByNameLikeIgnoreCase(repositoryFilter, pageable);
 		} else {
 			return find(pageable);
@@ -34,9 +34,9 @@ public class ProductService implements FilterableCrudService<Product> {
 	}
 
 	@Override
-	public long countAnyMatching(Optional<String> filter) {
-		if (filter.isPresent()) {
-			String repositoryFilter = "%" + filter.get() + "%";
+	public long countAnyMatching(String filter) {
+		if (filter != null) {
+			String repositoryFilter = "%" + filter + "%";
 			return productRepository.countByNameLikeIgnoreCase(repositoryFilter);
 		} else {
 			return count();

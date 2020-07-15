@@ -141,9 +141,9 @@ public class OrderEditor extends PolymerTemplate<OrderEditor.Model> {
 		pickupLocation.setItemLabelGenerator(createItemLabelGenerator(PickupLocation::getName));
 		pickupLocation.setDataProvider(
 				(filter,  offset, limit) -> {
-					return locationService.findAnyMatching(Optional.ofNullable(filter), PageRequest.of(offset/limit, limit)).stream();
+					return locationService.findAnyMatching(filter, PageRequest.of(offset/limit, limit)).stream();
 				}, 
-				filter -> (int) locationService.countAnyMatching(Optional.ofNullable(filter)));
+				filter -> (int) locationService.countAnyMatching(filter));
 		binder.bind(pickupLocation, "pickupLocation");
 		pickupLocation.setRequired(false);
 
