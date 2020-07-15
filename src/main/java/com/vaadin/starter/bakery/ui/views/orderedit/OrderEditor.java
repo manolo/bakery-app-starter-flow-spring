@@ -3,6 +3,7 @@ package com.vaadin.starter.bakery.ui.views.orderedit;
 import static com.vaadin.starter.bakery.ui.dataproviders.DataProviderUtil.createItemLabelGenerator;
 
 import java.time.LocalTime;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.data.domain.PageRequest;
 
 import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.ComponentUtil;
@@ -42,7 +44,6 @@ import com.vaadin.starter.bakery.backend.data.entity.Product;
 import com.vaadin.starter.bakery.backend.data.entity.User;
 import com.vaadin.starter.bakery.backend.service.PickupLocationService;
 import com.vaadin.starter.bakery.backend.service.ProductService;
-import com.vaadin.starter.bakery.ui.crud.CrudEntityDataProvider;
 import com.vaadin.starter.bakery.ui.dataproviders.DataProviderUtil;
 import com.vaadin.starter.bakery.ui.events.CancelEvent;
 import com.vaadin.starter.bakery.ui.utils.FormattingUtils;
@@ -111,9 +112,7 @@ public class OrderEditor extends PolymerTemplate<OrderEditor.Model> {
 
 	@Autowired
 	public OrderEditor(PickupLocationService locationService, ProductService productService) {
-		DataProvider<PickupLocation, String> locationDataProvider = new CrudEntityDataProvider<>(locationService);
-		DataProvider<Product, String> productDataProvider = new CrudEntityDataProvider<>(productService);
-		itemsEditor = new OrderItemsEditor(productDataProvider);
+		itemsEditor = new OrderItemsEditor(productService);
 
 		itemsContainer.add(itemsEditor);
 
@@ -140,7 +139,11 @@ public class OrderEditor extends PolymerTemplate<OrderEditor.Model> {
 		binder.bind(dueTime, "dueTime");
 
 		pickupLocation.setItemLabelGenerator(createItemLabelGenerator(PickupLocation::getName));
-		pickupLocation.setDataProvider(locationDataProvider);
+		pickupLocation.setDataProvider(
+				(filter,  offset, limit) -> {
+					return locationService.findAnyMatching(Optional.ofNullable(filter), PageRequest.of(offset/limit, limit)).stream();
+				}, 
+				filter -> (int) locationService.countAnyMatching(Optional.ofNullable(filter)));
 		binder.bind(pickupLocation, "pickupLocation");
 		pickupLocation.setRequired(false);
 

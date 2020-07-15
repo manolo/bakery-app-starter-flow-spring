@@ -23,8 +23,7 @@ public class BakeryConst {
 	public static final String TITLE_NOT_FOUND = "Page was not found";
 	public static final String TITLE_ACCESS_DENIED = "Access denied";
 
-	public static final String[] ORDER_SORT_FIELDS = {"dueDate", "dueTime", "id"};
-	public static final Sort.Direction DEFAULT_SORT_DIRECTION = Sort.Direction.ASC;
+	public static final Sort DEFAULT_SORT = Sort.by("dueDate", "dueTime", "id");
 
 	public static final String VIEWPORT = "width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes, viewport-fit=cover";
 

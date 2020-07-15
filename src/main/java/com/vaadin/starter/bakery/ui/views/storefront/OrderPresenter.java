@@ -1,8 +1,12 @@
 package com.vaadin.starter.bakery.ui.views.storefront;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.vaadin.flow.component.grid.dataview.GridLazyDataView;
+import com.vaadin.starter.bakery.ui.utils.SpringDataVaadinUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -15,10 +19,9 @@ import com.vaadin.starter.bakery.app.security.CurrentUser;
 import com.vaadin.starter.bakery.backend.data.entity.Order;
 import com.vaadin.starter.bakery.backend.service.OrderService;
 import com.vaadin.starter.bakery.ui.crud.EntityPresenter;
-import com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider;
-import com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider.OrderFilter;
 import com.vaadin.starter.bakery.ui.utils.BakeryConst;
 import com.vaadin.starter.bakery.ui.views.storefront.beans.OrderCardHeader;
+import org.springframework.data.domain.PageRequest;
 
 @SpringComponent
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -28,26 +31,26 @@ public class OrderPresenter {
 	private StorefrontView view;
 
 	private final EntityPresenter<Order, StorefrontView> entityPresenter;
-	private final OrdersGridDataProvider dataProvider;
 	private final CurrentUser currentUser;
 	private final OrderService orderService;
+	private String filter;
+	private boolean showPrevious;
+	private GridLazyDataView<Order> dataview;
 
 	@Autowired
-	OrderPresenter(OrderService orderService, OrdersGridDataProvider dataProvider,
+	OrderPresenter(OrderService orderService,
 			EntityPresenter<Order, StorefrontView> entityPresenter, CurrentUser currentUser) {
 		this.orderService = orderService;
 		this.entityPresenter = entityPresenter;
-		this.dataProvider = dataProvider;
 		this.currentUser = currentUser;
 		headersGenerator = new OrderCardHeaderGenerator();
 		headersGenerator.resetHeaderChain(false);
-		dataProvider.setPageObserver(p -> headersGenerator.ordersRead(p.getContent()));
 	}
 
 	void init(StorefrontView view) {
 		this.entityPresenter.setView(view);
 		this.view = view;
-		view.getGrid().setDataProvider(dataProvider);
+		listOrders();
 		view.getOpenedOrderEditor().setCurrentUser(currentUser.getUser());
 		view.getOpenedOrderEditor().addCancelListener(e -> cancel());
 		view.getOpenedOrderEditor().addReviewListener(e -> review());
@@ -63,8 +66,10 @@ public class OrderPresenter {
 	}
 
 	public void filterChanged(String filter, boolean showPrevious) {
+		this.filter = filter;
+		this.showPrevious = showPrevious;
 		headersGenerator.resetHeaderChain(showPrevious);
-		dataProvider.setFilter(new OrderFilter(filter, showPrevious));
+		listOrders();
 	}
 
 	void onNavigation(Long id, boolean edit) {
@@ -110,15 +115,45 @@ public class OrderPresenter {
 		entityPresenter.save(e -> {
 			if (entityPresenter.isNew()) {
 				view.showCreatedNotification();
-				dataProvider.refreshAll();
+				listOrders();
 			} else {
 				view.showUpdatedNotification();
-				dataProvider.refreshItem(e);
+				refreshOrder(e);
 			}
 			close();
 		});
 
 	}
+	
+	void refreshOrder(Order o) {
+		dataview.refreshItem(o);
+	}
+	
+	void listOrders() {
+		dataview = view.getGrid().setItems(q -> {
+			List<Order> orders = orderService.findAnyMatchingAfterDueDate(
+					Optional.ofNullable(filter),
+					getFilterDate(showPrevious),
+					PageRequest.of(
+							q.getPage(),
+							q.getPageSize(),
+							q.getSortOrders().isEmpty() ? BakeryConst.DEFAULT_SORT :
+									SpringDataVaadinUtil.toSpringDataSort(q)
+					)
+			).getContent();
+			headersGenerator.ordersRead(orders);
+			return orders.stream();
+		});
+	}
+
+	private Optional<LocalDate> getFilterDate(boolean showPrevious) {
+		if (showPrevious) {
+			return Optional.empty();
+		}
+
+		return Optional.of(LocalDate.now().minusDays(1));
+	}
+
 
 	void addComment(String comment) {
 		if (entityPresenter.executeUpdate(e -> orderService.addComment(currentUser.getUser(), e, comment))) {

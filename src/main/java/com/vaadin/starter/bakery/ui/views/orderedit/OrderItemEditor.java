@@ -1,7 +1,10 @@
 package com.vaadin.starter.bakery.ui.views.orderedit;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
+
+import org.springframework.data.domain.PageRequest;
 
 import com.vaadin.flow.component.AbstractField.ComponentValueChangeEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -10,6 +13,7 @@ import com.vaadin.flow.component.HasValueAndElement;
 import com.vaadin.flow.component.Tag;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.combobox.ComboBox.FetchItemsCallback;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.internal.AbstractFieldSupport;
@@ -19,11 +23,12 @@ import com.vaadin.flow.component.textfield.IntegerField;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.BeanValidationBinder;
 import com.vaadin.flow.data.binder.BindingValidationStatus;
-import com.vaadin.flow.data.provider.DataProvider;
+import com.vaadin.flow.function.SerializableFunction;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.flow.templatemodel.TemplateModel;
 import com.vaadin.starter.bakery.backend.data.entity.OrderItem;
 import com.vaadin.starter.bakery.backend.data.entity.Product;
+import com.vaadin.starter.bakery.backend.service.ProductService;
 import com.vaadin.starter.bakery.ui.utils.FormattingUtils;
 import com.vaadin.starter.bakery.ui.views.storefront.events.CommentChangeEvent;
 import com.vaadin.starter.bakery.ui.views.storefront.events.DeleteEvent;
@@ -54,10 +59,15 @@ public class OrderItemEditor extends PolymerTemplate<TemplateModel> implements H
     private final AbstractFieldSupport<OrderItemEditor,OrderItem> fieldSupport;
 
 	private BeanValidationBinder<OrderItem> binder = new BeanValidationBinder<>(OrderItem.class);
-	public OrderItemEditor(DataProvider<Product, String> productDataProvider) {
+	public OrderItemEditor(ProductService productService) {
 		this.fieldSupport =  new AbstractFieldSupport<>(this, null,
 				Objects::equals, c ->  {});
-		products.setDataProvider(productDataProvider);
+		products.setDataProvider((filter, offset, limit) -> 
+			productService.findAnyMatching(
+					Optional.ofNullable(filter),
+					PageRequest.of( (offset/limit), limit))
+			.stream(), 
+			filter -> (int) productService.countAnyMatching(Optional.ofNullable(filter)));
 		products.addValueChangeListener(e -> {
 			setPrice();
 			fireEvent(new ProductChangeEvent(this, e.getValue()));

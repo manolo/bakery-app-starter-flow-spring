@@ -12,11 +12,18 @@ import com.vaadin.starter.bakery.backend.data.entity.AbstractEntity;
 import com.vaadin.starter.bakery.backend.data.entity.util.EntityUtil;
 import com.vaadin.starter.bakery.backend.service.FilterableCrudService;
 import com.vaadin.starter.bakery.ui.components.SearchBar;
+import com.vaadin.starter.bakery.ui.utils.SpringDataVaadinUtil;
 import com.vaadin.starter.bakery.ui.utils.TemplateUtil;
 import com.vaadin.starter.bakery.ui.views.HasNotifications;
 import elemental.json.Json;
 
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends Crud<E>
         implements HasUrlParameter<Long>, HasNotifications {
@@ -48,8 +55,8 @@ public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends C
         crudI18n.setDeleteItem("Delete");
         setI18n(crudI18n);
 
-        CrudEntityDataProvider<E> dataProvider = new CrudEntityDataProvider<>(service);
-        grid.setDataProvider(dataProvider);
+        listItems(service, grid);
+        
         setupGrid(grid);
         Crud.addEditColumn(grid);
 
@@ -58,12 +65,22 @@ public abstract class AbstractBakeryCrudView<E extends AbstractEntity> extends C
         SearchBar searchBar = new SearchBar();
         searchBar.setActionText("New " + entityName);
         searchBar.setPlaceHolder("Search");
-        searchBar.addFilterChangeListener(e -> dataProvider.setFilter(searchBar.getFilter()));
+        searchBar.addFilterChangeListener(e -> listItems(service, grid, searchBar.getFilter()));
         searchBar.getActionButton().getElement().setAttribute("new-button", true);
 
         setToolbar(searchBar);
         setupCrudEventListeners(entityPresenter);
     }
+
+	private void listItems(FilterableCrudService<E> service, Grid<E> grid, String filter) {
+		grid.setItems(q -> {
+        	return service.findAnyMatching(Optional.of(filter), PageRequest.of(q.getPage(), q.getPageSize(), SpringDataVaadinUtil.toSpringDataSort(q).and(Sort.by("id")))).stream();
+        });
+	}
+
+	private void listItems(FilterableCrudService<E> service, Grid<E> grid) {
+		listItems(service, grid, "");
+	}
 
     private void setupCrudEventListeners(CrudEntityPresenter<E> entityPresenter) {
         Consumer<E> onSuccess = entity -> navigateToEntity(null);

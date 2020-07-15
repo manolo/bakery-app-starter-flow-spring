@@ -5,10 +5,12 @@ import java.time.MonthDay;
 import java.time.Year;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import com.vaadin.starter.bakery.ui.utils.SpringDataVaadinUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.vaadin.flow.component.ComponentEventListener;
@@ -40,11 +42,11 @@ import com.vaadin.starter.bakery.backend.data.entity.OrderSummary;
 import com.vaadin.starter.bakery.backend.data.entity.Product;
 import com.vaadin.starter.bakery.backend.service.OrderService;
 import com.vaadin.starter.bakery.ui.MainView;
-import com.vaadin.starter.bakery.ui.dataproviders.OrdersGridDataProvider;
 import com.vaadin.starter.bakery.ui.utils.BakeryConst;
 import com.vaadin.starter.bakery.ui.utils.FormattingUtils;
 import com.vaadin.starter.bakery.ui.views.storefront.OrderCard;
 import com.vaadin.starter.bakery.ui.views.storefront.beans.OrdersCountDataWithChart;
+import org.springframework.data.domain.PageRequest;
 
 @Tag("dashboard-view")
 @JsModule("./src/views/dashboard/dashboard-view.js")
@@ -88,7 +90,7 @@ public class DashboardView extends PolymerTemplate<TemplateModel> {
 	private Chart todayCountChart;
 
 	@Autowired
-	public DashboardView(OrderService orderService, OrdersGridDataProvider orderDataProvider) {
+	public DashboardView(OrderService orderService) {
 		this.orderService = orderService;
 
 		grid.addColumn(OrderCard.getTemplate()
@@ -98,7 +100,18 @@ public class DashboardView extends PolymerTemplate<TemplateModel> {
 						order -> UI.getCurrent().navigate(BakeryConst.PAGE_STOREFRONT + "/" + order.getId())));
 
 		grid.setSelectionMode(Grid.SelectionMode.NONE);
-		grid.setDataProvider(orderDataProvider);
+		grid.setItems(q -> {
+			return orderService.findAnyMatchingAfterDueDate(
+					Optional.empty(),
+					Optional.of(LocalDate.now().minusDays(1)),
+					PageRequest.of(
+							q.getPage(),
+							q.getPageSize(),
+							q.getSortOrders().isEmpty() ? BakeryConst.DEFAULT_SORT :
+									SpringDataVaadinUtil.toSpringDataSort(q)
+					)
+			).stream();
+		});
 
 		DashboardData data = orderService.getDashboardData(MonthDay.now().getMonthValue(), Year.now().getValue());
 		populateYearlySalesChart(data);

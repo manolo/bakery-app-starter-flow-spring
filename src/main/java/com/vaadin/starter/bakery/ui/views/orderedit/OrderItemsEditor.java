@@ -16,22 +16,23 @@ import com.vaadin.flow.data.provider.DataProvider;
 import com.vaadin.flow.shared.Registration;
 import com.vaadin.starter.bakery.backend.data.entity.OrderItem;
 import com.vaadin.starter.bakery.backend.data.entity.Product;
+import com.vaadin.starter.bakery.backend.service.ProductService;
 import com.vaadin.starter.bakery.ui.views.storefront.events.TotalPriceChangeEvent;
 
 public class OrderItemsEditor extends Div implements HasValueAndElement<ComponentValueChangeEvent<OrderItemsEditor,List<OrderItem>>, List<OrderItem>> {
 
 	private OrderItemEditor empty;
 
-	private DataProvider<Product, String> productDataProvider;
-
 	private int totalPrice = 0;
 
 	private boolean hasChanges = false;
 
 	private final AbstractFieldSupport<OrderItemsEditor,List<OrderItem>> fieldSupport;
+
+	private ProductService productService;
 	
-	public OrderItemsEditor(DataProvider<Product, String> productDataProvider) {
-		this.productDataProvider = productDataProvider;
+	public OrderItemsEditor(ProductService productService) {
+		this.productService = productService;
 		this.fieldSupport = new AbstractFieldSupport<>(this, Collections.emptyList(),
 				Objects::equals, c ->  {}); 
 	}
@@ -51,7 +52,7 @@ public class OrderItemsEditor extends Div implements HasValueAndElement<Componen
 	}
 
 	private OrderItemEditor createEditor(OrderItem value) {
-		OrderItemEditor editor = new OrderItemEditor(productDataProvider);
+		OrderItemEditor editor = new OrderItemEditor(productService);
 		getElement().appendChild(editor.getElement());
 		editor.addPriceChangeListener(e -> updateTotalPriceOnItemPriceChange(e.getOldValue(), e.getNewValue()));
 		editor.addProductChangeListener(e -> productChanged(e.getSource(), e.getProduct()));
