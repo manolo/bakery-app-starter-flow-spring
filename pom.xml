@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.vaadin.flow.demo</groupId>
     <artifactId>bakery-app-starter-flow-spring</artifactId>
@@ -11,7 +11,8 @@
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>2.2.0.RELEASE</version>
-        <relativePath /> <!-- lookup parent from repository -->
+        <relativePath />
+        <!-- lookup parent from repository -->
     </parent>
 
     <properties>
@@ -21,8 +22,9 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <!-- Dependencies -->
-        <vaadin.version>19.0.0.alpha4</vaadin.version>
-
+        <vaadin.version>20.0.0.alpha7</vaadin.version>
+        <flow.version>7.0.sec-SNAPSHOT</flow.version>
+        <spring.version>17.0.sec-SNAPSHOT</spring.version>
         <!-- Overrides the old version specified by the Spring Boot parent -->
         <selenium.version>3.141.59</selenium.version>
 
@@ -84,6 +86,18 @@
     </pluginRepositories>
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>vaadin-spring</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.vaadin</groupId>
+                <artifactId>flow-bom</artifactId>
+                <version>${flow.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>com.vaadin</groupId>
                 <artifactId>vaadin-bom</artifactId>
@@ -467,7 +481,7 @@
                                 <id>install-node-and-yarn</id>
                                 <goals>
                                     <goal>install-node-and-yarn</goal>
-                                    <goal>yarn</goal> <!-- runs 'install' by default -->
+                                    <goal>yarn</goal>                                    <!-- runs 'install' by default -->
                                 </goals>
                                 <configuration>
                                     <workingDirectory>${buildtools.directory}</workingDirectory>
