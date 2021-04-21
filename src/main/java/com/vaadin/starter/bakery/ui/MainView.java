@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.PostConstruct;
+
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasComponents;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -23,6 +25,8 @@ import com.vaadin.flow.component.tabs.Tabs;
 import com.vaadin.flow.router.RouteConfiguration;
 import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.VaadinServlet;
+import com.vaadin.flow.server.VaadinServletRequest;
+import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.starter.bakery.app.security.SecurityUtils;
 import com.vaadin.starter.bakery.ui.views.HasConfirmation;
 import com.vaadin.starter.bakery.ui.views.admin.products.ProductsView;
@@ -30,12 +34,17 @@ import com.vaadin.starter.bakery.ui.views.admin.users.UsersView;
 import com.vaadin.starter.bakery.ui.views.dashboard.DashboardView;
 import com.vaadin.starter.bakery.ui.views.storefront.StorefrontView;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 public class MainView extends AppLayout {
 
+	@Autowired
+	private AccessAnnotationChecker accessChecker;
 	private final ConfirmDialog confirmDialog = new ConfirmDialog();
-	private final Tabs menu;
+	private Tabs menu;
 
-	public MainView() {
+	@PostConstruct
+	public void init() {
 		confirmDialog.setCancelable(true);
 		confirmDialog.setConfirmButtonTheme("raised tertiary error");
 		confirmDialog.setCancelButtonTheme("raised tertiary");
@@ -69,7 +78,7 @@ public class MainView extends AppLayout {
 		RouteConfiguration configuration = RouteConfiguration.forSessionScope();
 		if (configuration.isRouteRegistered(this.getContent().getClass())) {
 			String target = configuration.getUrl(this.getContent().getClass());
-			Optional < Component > tabToSelect = menu.getChildren().filter(tab -> {
+			Optional<Component> tabToSelect = menu.getChildren().filter(tab -> {
 				Component child = tab.getChildren().findFirst().get();
 				return child instanceof RouterLink && ((RouterLink) child).getHref().equals(target);
 			}).findFirst();
@@ -79,22 +88,23 @@ public class MainView extends AppLayout {
 		}
 	}
 
-	private static Tabs createMenuTabs() {
+	private Tabs createMenuTabs() {
 		final Tabs tabs = new Tabs();
 		tabs.setOrientation(Tabs.Orientation.HORIZONTAL);
 		tabs.add(getAvailableTabs());
 		return tabs;
 	}
 
-	private static Tab[] getAvailableTabs() {
+	private Tab[] getAvailableTabs() {
 		final List<Tab> tabs = new ArrayList<>(4);
-		tabs.add(createTab(VaadinIcon.EDIT, TITLE_STOREFRONT,
-						StorefrontView.class));
-		tabs.add(createTab(VaadinIcon.CLOCK,TITLE_DASHBOARD, DashboardView.class));
-		if (SecurityUtils.isAccessGranted(UsersView.class)) {
-			tabs.add(createTab(VaadinIcon.USER,TITLE_USERS, UsersView.class));
+		tabs.add(createTab(VaadinIcon.EDIT, TITLE_STOREFRONT, StorefrontView.class));
+		tabs.add(createTab(VaadinIcon.CLOCK, TITLE_DASHBOARD, DashboardView.class));
+		if (accessChecker.annotationAllowsAccess(UsersView.class,
+				VaadinServletRequest.getCurrent().getHttpServletRequest())) {
+			tabs.add(createTab(VaadinIcon.USER, TITLE_USERS, UsersView.class));
 		}
-		if (SecurityUtils.isAccessGranted(ProductsView.class)) {
+		if (accessChecker.annotationAllowsAccess(ProductsView.class,
+				VaadinServletRequest.getCurrent().getHttpServletRequest())) {
 			tabs.add(createTab(VaadinIcon.CALENDAR, TITLE_PRODUCTS, ProductsView.class));
 		}
 		final String contextPath = VaadinServlet.getCurrent().getServletContext().getContextPath();
